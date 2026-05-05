@@ -1,0 +1,13 @@
+{
+  "name": "carbon-alert-combined",
+  "type": "widget",
+  "version": "1.0.0",
+  "exbVersion": "1.20.0",
+  "label": "Carbon Alert — Map Panel",
+  "description": "Legend and feature popup in one panel, connected to the map",
+  "defaultSize": {
+    "width": 300,
+    "height": 600
+  },
+  "properties": {}
+}

@@ -1,0 +1,280 @@
+{
+  "pages": {
+    "page_0": {
+      "id": "page_0",
+      "mode": "FIT_WINDOW",
+      "type": "NORMAL",
+      "layout": {
+        "LARGE": "layout_0",
+        "SMALL": "layout_2"
+      },
+      "isDefault": true,
+      "isVisible": true,
+      "label": "Page"
+    }
+  },
+  "layouts": {
+    "layout_0": {
+      "type": "FIXED",
+      "content": {
+        "0": {
+          "type": "WIDGET",
+          "widgetId": "widget_1",
+          "bbox": {
+            "left": "0.0%",
+            "right": "34.2%",
+            "top": "0.0%",
+            "bottom": "0.0%",
+            "width": "65.8%",
+            "height": "100.0%"
+          },
+          "setting": {
+            "autoProps": {
+              "left": false,
+              "right": true,
+              "top": true,
+              "bottom": false
+            }
+          }
+        },
+        "1": {
+          "type": "WIDGET",
+          "widgetId": "widget_2",
+          "bbox": {
+            "left": "65.8%",
+            "right": "0.0%",
+            "top": "0.0%",
+            "bottom": "0.0%",
+            "width": "34.2%",
+            "height": "100.0%"
+          },
+          "setting": {
+            "autoProps": {
+              "right": false,
+              "left": true,
+              "top": true,
+              "bottom": false
+            }
+          }
+        }
+      },
+      "order": [
+        "0",
+        "1"
+      ]
+    },
+    "layout_1": {
+      "content": {},
+      "type": "FIXED",
+      "label": "Map FixedLayout"
+    },
+    "layout_2": {
+      "type": "FIXED",
+      "content": {
+        "0": {
+          "type": "WIDGET",
+          "widgetId": "widget_1",
+          "bbox": {
+            "left": "0.0%",
+            "right": "0.0%",
+            "top": "0.0%",
+            "bottom": "36.5%",
+            "width": "100.0%",
+            "height": "63.5%"
+          },
+          "setting": {
+            "autoProps": {
+              "left": true,
+              "right": false,
+              "top": false,
+              "bottom": true
+            }
+          }
+        },
+        "1": {
+          "type": "WIDGET",
+          "widgetId": "widget_2",
+          "bbox": {
+            "left": "0.0%",
+            "right": "0.0%",
+            "top": "63.2%",
+            "bottom": "0.0%",
+            "width": "100.0%",
+            "height": "36.8%"
+          },
+          "setting": {
+            "autoProps": {
+              "right": false,
+              "left": true,
+              "top": true,
+              "bottom": false
+            }
+          }
+        }
+      },
+      "order": [
+        "0",
+        "1"
+      ]
+    },
+    "layout_3": {
+      "content": {},
+      "type": "FIXED",
+      "label": "Map FixedLayout"
+    }
+  },
+  "exbVersion": "1.20.0",
+  "mainSizeMode": "LARGE",
+  "theme": "themes/master/",
+  "forBuilderAttributes": {
+    "lockLayout": false
+  },
+  "template": "blankfullscreen",
+  "widgets": {
+    "widget_1": {
+      "uri": "widgets/arcgis/arcgis-map/",
+      "version": "1.20.0",
+      "label": "Map",
+      "config": {
+        "toolConfig": {
+          "canZoom": true,
+          "canHome": true,
+          "canSearch": true,
+          "canNavigation": true
+        },
+        "isUseCustomMapState": false,
+        "initialMapDataSourceID": "dataSource_1",
+        "initialMapState": null,
+        "scaleRange": null,
+        "customLODs": null
+      },
+      "id": "widget_1",
+      "layouts": {
+        "MapFixedLayout": {
+          "LARGE": "layout_1",
+          "SMALL": "layout_3"
+        }
+      },
+      "dataActions": {
+        "showOnMap": {
+          "config": {
+            "isUseCustomSymbol": true,
+            "isOperationalLayer": true,
+            "symbolOption": {
+              "pointSymbol": {
+                "type": "esriSMS",
+                "color": [
+                  255,
+                  255,
+                  0,
+                  150
+                ],
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "size": 12,
+                "style": "esriSMSCircle",
+                "outline": {
+                  "type": "esriSLS",
+                  "color": [
+                    255,
+                    255,
+                    0,
+                    150
+                  ],
+                  "width": 1,
+                  "style": "esriSLSSolid"
+                }
+              },
+              "polylineSymbol": {
+                "type": "esriSLS",
+                "color": [
+                  255,
+                  255,
+                  0,
+                  150
+                ],
+                "width": 0.75,
+                "style": "esriSLSSolid"
+              },
+              "polygonSymbol": {
+                "type": "esriSFS",
+                "color": [
+                  255,
+                  255,
+                  0,
+                  150
+                ],
+                "outline": {
+                  "type": "esriSLS",
+                  "color": [
+                    255,
+                    255,
+                    0,
+                    150
+                  ],
+                  "width": 1,
+                  "style": "esriSLSSolid"
+                },
+                "style": "esriSFSSolid"
+              }
+            }
+          }
+        }
+      },
+      "useDataSources": [
+        {
+          "dataSourceId": "dataSource_1",
+          "mainDataSourceId": "dataSource_1"
+        }
+      ]
+    },
+    "widget_2": {
+      "uri": "widgets/carbon-alert-combined/",
+      "version": "1.0.0",
+      "label": "Carbon Alert — Map Panel",
+      "config": {},
+      "id": "widget_2",
+      "useMapWidgetIds": [
+        "widget_1"
+      ]
+    }
+  },
+  "widgetsManifest": {},
+  "views": {},
+  "sections": {},
+  "dialogs": {},
+  "messageConfigs": {},
+  "attributes": {
+    "portalUrl": "https://CarbonMT.maps.arcgis.com",
+    "isWebTier": false,
+    "clientId": "",
+    "express": false,
+    "title": "Carbon Alert Map v2",
+    "description": "",
+    "type": "Web Experience",
+    "thumbnail": null
+  },
+  "timestamp": 1778017778245,
+  "sharedThemeVariables": {
+    "header": {},
+    "body": {},
+    "button": {}
+  },
+  "mainLocale": "en-us",
+  "dataSources": {
+    "dataSource_1": {
+      "id": "dataSource_1",
+      "type": "WEB_MAP",
+      "sourceLabel": "Carbon Alert Incident Map",
+      "itemId": "67afe6c3c1d54e2ebb4fddad01247797",
+      "portalUrl": "https://CarbonMT.maps.arcgis.com"
+    }
+  },
+  "pageStructure": [
+    {
+      "page_0": []
+    }
+  ],
+  "publishTimestamp": 1778017779614
+}
