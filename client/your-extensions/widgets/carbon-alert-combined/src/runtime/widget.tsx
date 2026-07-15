@@ -92,6 +92,12 @@ function injectStyles(): void {
 
     /* Zoom dropdown items */
     .ca-zoom-item:hover, .ca-zoom-item:focus-visible { background: #EFF6FF !important; }
+
+    /* Mobile: bigger type + row height in the feature list table so it's
+       readable and tappable at phone widths without shrinking columns. */
+    .ca-mobile .ca-list-table th { font-size: 11px; padding: 8px 10px; }
+    .ca-mobile .ca-list-table td { font-size: 13px; padding: 10px 10px; }
+    .ca-mobile .ca-list-table { min-width: 480px; }
   `
   document.head.appendChild(style)
 }
@@ -353,32 +359,32 @@ function getSwatch(type: string): React.ReactElement {
 
 interface PopupData { title: TrackedTitle; attrs: Record<string, any>; geometry: any | null }
 
-function Field({ label, value }: { label: string; value: string | null | undefined }): React.ReactElement {
+function Field({ label, value, isMobile }: { label: string; value: string | null | undefined; isMobile?: boolean }): React.ReactElement {
   const v = (value && value !== '—') ? value : '—'
-  return React.createElement('div', { style: { marginBottom: 14 } },
+  return React.createElement('div', { style: { marginBottom: isMobile ? 16 : 14 } },
     // dt-style label — not using <dl> here because it's inside a grid, but the
     // visual label + value pairing is clear and announced correctly by screen readers
     React.createElement('p', {
       id: undefined,
-      style: { margin: '0 0 3px', fontSize: 10, fontWeight: 700, color: '#4B5563', textTransform: 'uppercase' as const, letterSpacing: '0.07em', fontFamily: F_BODY }
+      style: { margin: '0 0 3px', fontSize: isMobile ? 11 : 10, fontWeight: 700, color: '#4B5563', textTransform: 'uppercase' as const, letterSpacing: '0.07em', fontFamily: F_BODY }
     }, label),
     React.createElement('p', {
-      style: { margin: 0, fontSize: 13, color: v === '—' ? '#9CA3AF' : '#111827', lineHeight: 1.5, fontFamily: F_BODY }
+      style: { margin: 0, fontSize: isMobile ? 14 : 13, color: v === '—' ? '#9CA3AF' : '#111827', lineHeight: 1.5, fontFamily: F_BODY }
     }, v)
   )
 }
 
-function MsgBlock({ label, text, accent }: { label: string; text: string | null | undefined; accent: string }): React.ReactElement {
+function MsgBlock({ label, text, accent, isMobile }: { label: string; text: string | null | undefined; accent: string; isMobile?: boolean }): React.ReactElement {
   if (!text) return React.createElement('div', { 'aria-hidden': 'true', style: { height: 64 } })
   return React.createElement('div', {
-    style: { padding: '10px 12px', background: '#F9FAFB', borderLeft: `3px solid ${accent}`, borderRadius: '0 4px 4px 0' }
+    style: { padding: isMobile ? '12px 14px' : '10px 12px', background: '#F9FAFB', borderLeft: `3px solid ${accent}`, borderRadius: '0 4px 4px 0' }
   },
-    React.createElement('p', { style: { margin: '0 0 4px', fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase' as const, letterSpacing: '0.07em', fontFamily: F_BODY } }, label),
-    React.createElement('p', { style: { margin: 0, fontSize: 13, color: '#111827', lineHeight: 1.55, fontFamily: F_BODY } }, text)
+    React.createElement('p', { style: { margin: '0 0 4px', fontSize: isMobile ? 11 : 10, fontWeight: 700, color: accent, textTransform: 'uppercase' as const, letterSpacing: '0.07em', fontFamily: F_BODY } }, label),
+    React.createElement('p', { style: { margin: 0, fontSize: isMobile ? 14 : 13, color: '#111827', lineHeight: 1.55, fontFamily: F_BODY } }, text)
   )
 }
 
-function renderPopupContent(data: PopupData): React.ReactElement {
+function renderPopupContent(data: PopupData, isMobile?: boolean): React.ReactElement {
   const { title, attrs: a } = data
   const accent = ACCENT[title]
   const e = React.createElement
@@ -430,14 +436,19 @@ function renderPopupContent(data: PopupData): React.ReactElement {
   return e('div', null,
     // h3 — widget panel is a landmark region (role=region), so the feature name
     // sits at heading level 3 in the document outline
-    e('h3', { style: { margin: '0 0 2px', fontSize: 16, fontWeight: 700, color: '#111827', fontFamily: F_HEAD, lineHeight: 1.3 } }, name),
-    e('p',  { style: { margin: '0 0 16px', fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: F_BODY } }, sub),
-    e('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' } },
-      e(Field as any, { label: whenLabel,   value: whenVal }),
-      e(Field as any, { label: statusLabel, value: statusVal })
+    e('h3', { style: { margin: '0 0 2px', fontSize: isMobile ? 17 : 16, fontWeight: 700, color: '#111827', fontFamily: F_HEAD, lineHeight: 1.3 } }, name),
+    e('p',  { style: { margin: '0 0 16px', fontSize: isMobile ? 11 : 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: F_BODY } }, sub),
+    // Single column on mobile — two narrow columns get cramped and hard to
+    // read/tap on a phone-width popup.
+    e('div', { style: isMobile
+        ? { display: 'flex', flexDirection: 'column' as const }
+        : { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }
+    },
+      e(Field as any, { label: whenLabel,   value: whenVal, isMobile }),
+      e(Field as any, { label: statusLabel, value: statusVal, isMobile })
     ),
-    e(Field as any, { label: detailLabel, value: detailVal }),
-    e(MsgBlock as any, { label: msgLabel, text: msgVal, accent })
+    e(Field as any, { label: detailLabel, value: detailVal, isMobile }),
+    e(MsgBlock as any, { label: msgLabel, text: msgVal, accent, isMobile })
   )
 }
 
@@ -448,9 +459,10 @@ interface ZoomDropdownProps {
   label: string
   arcViewRef: React.MutableRefObject<any>
   dropdownId: string
+  isMobile?: boolean
 }
 
-function ZoomDropdown({ layerKey, label, arcViewRef, dropdownId }: ZoomDropdownProps): React.ReactElement {
+function ZoomDropdown({ layerKey, label, arcViewRef, dropdownId, isMobile }: ZoomDropdownProps): React.ReactElement {
   const [open,     setOpen]     = useState(false)
   const [loading,  setLoading]  = useState(false)
   const [features, setFeatures] = useState<ZoomFeature[]>([])
@@ -505,7 +517,11 @@ function ZoomDropdown({ layerKey, label, arcViewRef, dropdownId }: ZoomDropdownP
       'aria-controls': dropdownId,
       'aria-label': `Zoom to a ${label} feature`,
       title: `Zoom to ${label}`,
-      style: { background: 'none', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: 3, display: 'flex', alignItems: 'center', color: '#1D4ED8', flexShrink: 0 }
+      style: {
+        background: 'none', border: 'none', cursor: 'pointer', borderRadius: 3,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1D4ED8', flexShrink: 0,
+        padding: isMobile ? '12px' : '8px', minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined
+      }
     },
       e('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
         e('circle', { cx: 6.5, cy: 6.5, r: 4.5, stroke: '#1D4ED8', strokeWidth: 1.6 }),
@@ -520,7 +536,13 @@ function ZoomDropdown({ layerKey, label, arcViewRef, dropdownId }: ZoomDropdownP
       role: 'listbox',
       // Item count announced when dropdown opens — fixes WCAG 4.1.3 status messages
       'aria-label': `${label} features — ${features.length} item${features.length !== 1 ? 's' : ''}`,
-      style: { position: 'absolute', bottom: '100%', right: 0, marginBottom: 4, width: 220, maxHeight: 180, overflowY: 'auto', background: '#FFFFFF', border: '1px solid #D1D5DB', borderRadius: 6, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 999, fontFamily: F_BODY }
+      style: {
+        position: 'absolute', bottom: '100%', right: 0, marginBottom: 4,
+        width: isMobile ? 'min(240px, calc(100vw - 32px))' : 220,
+        maxHeight: isMobile ? 220 : 180, overflowY: 'auto', background: '#FFFFFF',
+        border: '1px solid #D1D5DB', borderRadius: 6, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+        zIndex: 999, fontFamily: F_BODY
+      }
     },
       loading && e('div', { role: 'status', 'aria-live': 'polite', style: { padding: '10px 12px', fontSize: 12, color: '#6B7280', textAlign: 'center' } }, 'Loading features…'),
       error   && e('div', { role: 'alert',  style: { padding: '10px 12px', fontSize: 12, color: '#DC2626', textAlign: 'center' } }, 'No features found.'),
@@ -540,7 +562,7 @@ function ZoomDropdown({ layerKey, label, arcViewRef, dropdownId }: ZoomDropdownP
               if (ev.key === 'ArrowDown') { ev.preventDefault(); items[Math.min(i + 1, items.length - 1)]?.focus() }
               if (ev.key === 'ArrowUp')   { ev.preventDefault(); items[Math.max(i - 1, 0)]?.focus() }
             },
-            style: { display: 'block', width: '100%', textAlign: 'left', padding: '7px 12px', background: 'none', border: 'none', cursor: feat.geometry ? 'pointer' : 'default', fontSize: 12, color: feat.geometry ? '#111827' : '#6B7280', fontFamily: F_BODY },
+            style: { display: 'block', width: '100%', textAlign: 'left', padding: isMobile ? '11px 12px' : '7px 12px', background: 'none', border: 'none', cursor: feat.geometry ? 'pointer' : 'default', fontSize: isMobile ? 13 : 12, color: feat.geometry ? '#111827' : '#6B7280', fontFamily: F_BODY },
             'aria-label': `Zoom to ${feat.label}${!feat.geometry ? ' (no location available)' : ''}`,
             'aria-disabled': !feat.geometry
           }, feat.label)
@@ -595,8 +617,10 @@ function ListPanel({ arcViewRef, listPanelId, isMobile }: ListPanelProps): React
     ),
     error && e('p', { role: 'alert', style: { margin: 0, padding: '12px', fontSize: 12, color: '#DC2626' } }, 'Could not load features. Check your connection.'),
 
-    // Scrollable table — max 220px so it doesn't overwhelm the panel
-    !error && e('div', { style: { maxHeight: 220, overflowY: 'auto' } },
+    // Scrollable table — max 220px so it doesn't overwhelm the panel.
+    // overflowX so a narrow phone screen scrolls the table horizontally
+    // instead of crushing every column unreadably small.
+    !error && e('div', { style: { maxHeight: 220, overflowY: 'auto', overflowX: 'auto' } },
       e('table', {
         className: 'ca-list-table',
         // summary attr is deprecated but helps some older AT
@@ -643,7 +667,12 @@ function ListPanel({ arcViewRef, listPanelId, isMobile }: ListPanelProps): React
                 ? e('button', {
                     onClick: () => zoomTo(arcViewRef.current, row.geometry),
                     'aria-label': `Zoom to ${row.name}`,
-                    style: { background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', borderRadius: 3, color: '#1D4ED8', display: 'flex', alignItems: 'center' }
+                    style: {
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      padding: isMobile ? '8px' : '2px 4px', borderRadius: 3, color: '#1D4ED8',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      minWidth: isMobile ? 36 : undefined, minHeight: isMobile ? 36 : undefined
+                    }
                   },
                     e('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
                       e('circle', { cx: 6.5, cy: 6.5, r: 4.5, stroke: '#1D4ED8', strokeWidth: 1.6 }),
@@ -670,6 +699,15 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
   })
   const [containerH, setContainerH] = useState<number>(0)
   const [containerW, setContainerW] = useState<number>(0)
+  // Mobile-only: how much real screen height is left below wherever this
+  // widget sits, measured against window.innerHeight rather than the
+  // widget's own DOM box. The ancestor wrapper EB gives this widget on the
+  // phone-stacked layout has no explicit height of its own (it just mirrors
+  // whatever height we end up being) — so measuring OUR OWN box for sizing
+  // is circular and unreliable. Anchoring to the actual viewport instead
+  // gives a number that can't collapse to 0 or clip content with no way to
+  // scroll to it.
+  const [viewportAvailH, setViewportAvailH] = useState<number>(0)
   // Live region message for screen readers — announced independently of focus
   const [liveMsg,    setLiveMsg]    = useState<string>('')
 
@@ -699,6 +737,30 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
            })
     ro.observe(el)
     return () => ro.disconnect()
+  }, [])
+
+  // ── Viewport-anchored available height (mobile only) ──────────────────────
+  // Measures from the widget's actual position in the real viewport, not its
+  // own (unreliable, ancestor-dependent) offsetHeight. Re-measured on resize
+  // and orientation change so rotating the phone or the mobile browser's
+  // chrome hiding/showing doesn't leave a stale value.
+  useEffect(() => {
+    const measure = () => {
+      const el = rootRef.current
+      if (!el) return
+      const top = el.getBoundingClientRect().top
+      const avail = Math.max(120, window.innerHeight - top)
+      setViewportAvailH(avail)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    window.addEventListener('orientationchange', measure)
+    const t = setTimeout(measure, 300) // catches late layout settling on mount
+    return () => {
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('orientationchange', measure)
+      clearTimeout(t)
+    }
   }, [])
 
   // ── Focus trap inside popup dialog ────────────────────────────────────────
@@ -795,7 +857,10 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
   }
 
 // ── Derived layout ────────────────────────────────────────────────────────
-    const isMobile = containerW < 480
+    // Threshold raised from 480 -> 600: covers real phones (~360-430px) plus
+    // any narrow sidebar/embed context (e.g. a Hub-embedded iframe column)
+    // that's too tight for the desktop side-by-side layout.
+    const isMobile = containerW < 600
     const LEGEND_H_ACTUAL = isMobile ? 170 : 310
     const LIST_H_ACTUAL   = isMobile ? 190 : 320
     const TOTAL_BOTTOM_H  = LEGEND_H_ACTUAL + (listOpen ? LIST_H_ACTUAL : 0)
@@ -804,8 +869,14 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
              : Math.max(0, containerH - TOTAL_BOTTOM_H)
     const legendT = popupH
     const listT   = popupH + LEGEND_H_ACTUAL
+    // NOTE: mobile doesn't use a computed pixel height at all — see the root
+    // element below for why (the whole "measure containerH, subtract legend
+    // height" scheme depends on the widget's own box having a real, definite
+    // height on a real device, which the phone's stacked layout doesn't
+    // reliably provide). minHeight here is just a static floor, not derived
+    // from containerH, so it can't collapse to 0 the way the old version did.
     const popupStyle: React.CSSProperties = isMobile
-      ? { position: 'relative', left: 0, right: 0, minHeight: 160, display: 'flex', flexDirection: 'column', overflow: 'hidden' }
+      ? { position: 'relative', left: 0, right: 0, minHeight: 160, display: 'flex', flexDirection: 'column', overflow: 'visible' }
       : { position: 'absolute', top: 0, left: 0, right: 0, height: popupH, display: 'flex', flexDirection: 'column', overflow: 'hidden' }
 
   // ── Legend ────────────────────────────────────────────────────────────────
@@ -820,7 +891,7 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
                 e('div', { role: 'group', 'aria-labelledby': 'ca-legend-heading' }, 
          ...LEGEND_LAYERS.map(layer => {
                             const on = visibility[layer.key]
-                            return e('div', { key: layer.key, style: { display: 'flex', alignItems: 'center', width: '100%', padding: '0 4px', gap: 4, minHeight: 36 } },
+                            return e('div', { key: layer.key, style: { display: 'flex', alignItems: 'center', width: '100%', padding: '0 4px', gap: 4, minHeight: isMobile ? 44 : 36 } },
                                  e('button', {
                                       role: 'switch',
                                      'aria-checked': on,
@@ -829,24 +900,25 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
                                       onClick: () => toggleLayer(layer.key, layer.toggleTitle),
                                       style: {
                                            display: 'flex', alignItems: 'center', gap: 8, flex: 1,
-                                           padding: '4px 4px', background: 'none', border: 'none', borderRadius: 4,
+                                           padding: isMobile ? '6px 4px' : '4px 4px', background: 'none', border: 'none', borderRadius: 4,
                                            cursor: mapReady ? 'pointer' : 'default', textAlign: 'left',
-                                           fontFamily: F_BODY, minHeight: 36
+                                           fontFamily: F_BODY, minHeight: isMobile ? 44 : 36
                                         }
-                                   },   
+                                   },
                                         e('span', { style: { display: 'flex', alignItems: 'center', width: 26, justifyContent: 'center', flexShrink: 0 } },
                                               getSwatch(layer.swatch)
                                         ),
                                         e('span', {
                                              className: 'ca-layer-label',
-                                              style: { flex: 1, fontSize: 12, color: '#111827', fontWeight: 500, fontFamily: F_BODY }
+                                              style: { flex: 1, fontSize: isMobile ? 14 : 12, color: '#111827', fontWeight: 500, fontFamily: F_BODY }
                                          }, layer.label)
                                     ),
                                    mapReady && e(ZoomDropdown as any, {
                                         layerKey:   layer.key,
                                         label:      layer.label,
                                         arcViewRef,
-                                        dropdownId: `zoom-dd-${layer.key}`
+                                        dropdownId: `zoom-dd-${layer.key}`,
+                                        isMobile
                                     })
                               )
                          })
@@ -875,10 +947,10 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
                       style: {
                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                            width: 'calc(100% - 16px)', margin: '8px 8px 2px',
-                           padding: '6px 10px', background: listOpen ? '#EFF6FF' : '#F3F4F6',
+                           padding: isMobile ? '12px 12px' : '6px 10px', background: listOpen ? '#EFF6FF' : '#F3F4F6',
                            border: `1px solid ${listOpen ? '#BFDBFE' : '#E5E7EB'}`,
-                           borderRadius: 4, cursor: 'pointer',
-                          fontSize: 11, fontWeight: 600, color: '#1D4ED8', fontFamily: F_BODY
+                           borderRadius: 4, cursor: 'pointer', minHeight: isMobile ? 44 : undefined,
+                          fontSize: isMobile ? 13 : 11, fontWeight: 600, color: '#1D4ED8', fontFamily: F_BODY
                        }
                  },
                       'View features as list',
@@ -889,7 +961,13 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
               )
 
   // ── Popup panel ───────────────────────────────────────────────────────────
-  const popupPanel = containerH === 0
+  // The containerH===0 guard only matters for the desktop absolute-position
+  // math below (avoids a flash of a 0-height box before the first real
+  // measurement comes in). Mobile no longer depends on containerH for sizing,
+  // so it should never be gated behind this — that was the bug that made the
+  // popup (and the feature list panel, same guard elsewhere) render nothing
+  // on real phones.
+  const popupPanel = (!isMobile && containerH === 0)
     ? null
     : loading
     ? e('div', { style: { ...popupStyle, alignItems: 'center', justifyContent: 'center' } },
@@ -915,11 +993,15 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
             ref: closeRef,
             onClick: () => setPopup(null),
             'aria-label': 'Close feature details',
-            style: { background: 'none', border: '1px solid #D1D5DB', borderRadius: 4, cursor: 'pointer', padding: '3px 8px', fontSize: 11, color: '#374151', fontFamily: F_BODY, minHeight: 28, flexShrink: 0 }
+            style: {
+              background: 'none', border: '1px solid #D1D5DB', borderRadius: 4, cursor: 'pointer',
+              padding: isMobile ? '8px 14px' : '3px 8px', fontSize: isMobile ? 13 : 11, color: '#374151',
+              fontFamily: F_BODY, minHeight: isMobile ? 44 : 28, minWidth: isMobile ? 44 : undefined, flexShrink: 0
+            }
           }, '✕')
         ),
-        e('div', { style: { padding: '14px 14px 16px', overflowY: 'auto', flex: 1 } },
-          renderPopupContent(popup)
+        e('div', { style: { padding: isMobile ? '16px 16px 18px' : '14px 14px 16px', overflowY: 'auto', flex: 1 } },
+          renderPopupContent(popup, isMobile)
         ),
         e('div', { style: { padding: '8px 12px', borderTop: '1px solid #F3F4F6', background: '#F9FAFB', flexShrink: 0 } },
           e('p', { style: { margin: 0, fontSize: 10, color: '#6B7280', fontFamily: F_BODY } }, 'Carbon County Office of Emergency Management')
@@ -934,12 +1016,21 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
   // ── Root ──────────────────────────────────────────────────────────────────
   return e('div', {
     ref: rootRef,
-    className: 'ca-widget',
+    className: isMobile ? 'ca-widget ca-mobile' : 'ca-widget',
     // role=region + aria-label makes this a named landmark in the AT rotor/menu
     role: 'region',
     'aria-label': 'Carbon Alert emergency information',
+     // Mobile: NOT position:absolute/inset:0. That requires a positioned
+     // ancestor with a real, definite height to resolve against — fine on
+     // desktop (Large breakpoint gives this widget a fixed-size box), but on
+     // the phone's stacked Small-breakpoint layout the wrapping box mirrors
+     // whatever height WE end up being, so inset:0 is circular. Instead we
+     // size explicitly off viewportAvailH (measured against the real
+     // viewport — see the effect above) and scroll internally when content
+     // is taller than that. Falls back to natural height until the first
+     // measurement lands.
      style: isMobile
-                   ? { position: 'absolute', inset: 0, background: '#FFFFFF', fontFamily: F_BODY, overflowY: 'auto', borderLeft: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column' }
+                   ? { position: 'relative', background: '#FFFFFF', fontFamily: F_BODY, borderLeft: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', height: viewportAvailH > 0 ? viewportAvailH : 'auto', overflowY: 'auto', overflowX: 'hidden' }
                    : { position: 'absolute', inset: 0, background: '#FFFFFF', fontFamily: F_BODY, overflowX: 'hidden', overflowY: 'auto', borderLeft: '1px solid #E5E7EB' }
   },
     // Skip link — jumps keyboard users past the map+legend to the feature list
@@ -968,13 +1059,28 @@ export default function Widget(props: AllWidgetProps<{}>): React.ReactElement {
     popupPanel,
     legend,
 
-    // Feature list panel — positioned below legend
-    containerH > 0 && listOpen && e('div', {
-                style: isMobile
-                     ? { position: 'relative', left: 0, right: 0, overflowY: 'auto' }
-                     : { position: 'absolute', top: listT, left: 0, right: 0, height: LIST_H_ACTUAL, overflowY: 'auto' }
-           },
-                e(ListPanel as any, { arcViewRef, listPanelId, isMobile })
-           )
+    // Feature list panel — positioned below legend.
+    // Mobile: always mounted, visibility toggled via the (pre-existing)
+    // .ca-list-panel-collapsed { display:none } CSS class instead of
+    // conditionally mounting/unmounting the element. iOS Safari has known
+    // quirks recomputing scroll-content height when a new child is inserted
+    // into an already-scrolled flex column after the fact — toggling display
+    // on an element that's been in the layout from the start sidesteps that
+    // instead of chasing it further blind. Desktop is untouched (still
+    // needs containerH measured first for its absolute-position math).
+    isMobile
+      ? e('div', {
+          // Inline display toggle, not a CSS class — removes any dependency
+          // on the injected <style> tag having mounted/applied by the time
+          // this renders. Matches popupStyle's mobile shape otherwise
+          // (that one is confirmed working on real iPhone): overflow:visible
+          // + flex column, not overflowY:auto. ListPanel scrolls its own
+          // inner table via its own maxHeight/overflow, same as the popup's
+          // content div does.
+          style: { position: 'relative', left: 0, right: 0, display: listOpen ? 'flex' : 'none', flexDirection: 'column', overflow: 'visible' }
+        }, e(ListPanel as any, { arcViewRef, listPanelId, isMobile }))
+      : (containerH > 0 && listOpen && e('div', {
+          style: { position: 'absolute', top: listT, left: 0, right: 0, height: LIST_H_ACTUAL, overflowY: 'auto' }
+        }, e(ListPanel as any, { arcViewRef, listPanelId, isMobile })))
   )
 }
