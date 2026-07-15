@@ -12,20 +12,65 @@ The widget is **not a standalone webpage** — it only runs inside an Experience
 
 ---
 
+## How This Is Deployed
+
+This repo IS the Experience Builder install folder. GitHub Pages serves it directly — there is no separate build/export/upload step to ArcGIS Online. The live site at `https://pb1268901.github.io/carbon-alert-incidentmap/` is served straight from this repo.
+
+**Do not use the Download button in the Dev Edition GUI** — that exports a ZIP for ArcGIS Online hosting, which is a completely separate deployment path not used here.
+
+---
+
 ## Repository Structure
 
 ```
 /
 ├── README.md
-└── your-extensions/
-    └── widgets/
-        └── carbon-alert-combined/
-            └── src/
-                └── runtime/
-                    └── widget.tsx      ← All widget code lives here
+├── cdn/
+│   └── 6/
+│       └── widgets/
+│           └── carbon-alert-combined/
+│               └── dist/
+│                   └── runtime/
+│                       └── widget.js     ← Compiled widget (what GitHub Pages serves)
+├── client/
+│   └── your-extensions/
+│       └── widgets/
+│           └── carbon-alert-combined/
+│               └── src/
+│                   └── runtime/
+│                       └── widget.tsx    ← Source file (edit this)
+└── index.html
 ```
 
-The widget is a single self-contained file (`widget.tsx`). All styles are injected at runtime via a `<style>` tag — there are no separate CSS files.
+---
+
+## Making Changes to the Widget
+
+**Edit → Build → Push. That's it.**
+
+1. Edit the source file on your local machine:
+   ```
+   C:\arcgis-experience-builder-1.20\client\your-extensions\widgets\carbon-alert-combined\src\runtime\widget.tsx
+   ```
+
+2. Build the compiled output from the `client` folder:
+   ```bash
+   cd C:\arcgis-experience-builder-1.20\client
+   npm run build:prod
+   ```
+   This compiles `widget.tsx` into `cdn\6\widgets\carbon-alert-combined\dist\runtime\widget.js`.
+
+3. Push to GitHub from the repo root:
+   ```bash
+   cd C:\arcgis-experience-builder-1.20
+   git add cdn/6/widgets/carbon-alert-combined/dist/runtime/widget.js
+   git commit -m "Your change description"
+   git push origin master:main
+   ```
+
+4. GitHub Pages redeploys automatically. Allow 1-2 minutes then hard-refresh (`Ctrl+Shift+R`).
+
+> **Note:** If git doesn't detect the compiled file as changed after a build, edit `widget.js` directly via the GitHub web editor (pencil icon) as a fallback. For small targeted changes this is often faster anyway.
 
 ---
 
@@ -55,44 +100,6 @@ All services are hosted on ArcGIS Online under the organization `lo6DwqkHoBfbpsN
 
 ---
 
-## Making Changes to the Widget
-
-1. Open a terminal and start the Experience Builder dev server:
-   ```
-   cd /path/to/experience-builder
-   npm start
-   ```
-2. Open `your-extensions/widgets/carbon-alert-combined/src/runtime/widget.tsx` in your editor.
-3. Save changes — the browser will hot-reload automatically.
-4. When done, export the app (see Deployment below).
-
-**Do not** rename the widget folder or change the folder structure — Experience Builder uses the folder name as the widget ID and will break if it changes.
-
----
-
-## Deployment
-
-### Publishing to ArcGIS Online
-
-1. In the Experience Builder UI, click the **Download** button (top toolbar, down-arrow icon). Leave "Apply builder client ID" **unchecked**.
-2. You will get a ZIP file of the built app.
-3. Go to **arcgis.com → Content → My Content → New Item → Your device**.
-4. Select the ZIP. When prompted for item type, choose **Application → Experience Builder**.
-5. The app now has a shareable URL: `https://experience.arcgis.com/experience/YOUR_ITEM_ID`
-
-> Do **not** drag-and-drop the ZIP onto the AGOL content page — it will be misidentified as a shapefile.
-
-### Embedding on an ArcGIS Hub Site
-
-1. Open your Hub site in edit mode.
-2. Add a **Summary** or **Custom** card and choose the iframe/embed option.
-3. Paste the Experience Builder URL from the step above.
-4. Recommended iframe attributes: `allowfullscreen`, `width="100%"`, `height="700px"`.
-
-To update the embedded app after making code changes, re-export the ZIP and re-upload it to the same AGOL item (Edit Item → Update → replace the file). The Hub embed URL does not change.
-
----
-
 ## Common Problems and Fixes
 
 **Widget shows "Open widget settings and select your map"**
@@ -102,16 +109,13 @@ The widget is not connected to a map. In Experience Builder, open Widget Setting
 The Feature Service is likely unavailable or the layer field names have changed. Open browser DevTools (F12) → Console tab. Load the page and click a feature — look for `[CarbonAlert] query error` messages. Cross-check field names against the service's REST endpoint (`/FeatureServer/0?f=json`). Field names are hardcoded in `widget.tsx` — search for the layer title to find which block to update.
 
 **Zoom button doesn't navigate anywhere**
-Open DevTools Console and click a zoom dropdown item. Look for `[CarbonAlert:zoom]` log lines. If `arcView: false` is logged, the map view hasn't connected yet — try refreshing. If geometry logs correctly but the map doesn't move, the ArcGIS JS version may have changed its `goTo` API. The widget tries `esri/geometry/Extent` via AMD require first, then falls back to `center + zoom`.
+Open DevTools Console and click a zoom dropdown item. Look for `[CarbonAlert:zoom]` log lines. If `arcView: false` is logged, the map view hasn't connected yet — try refreshing. If geometry logs correctly but the map doesn't move, the ArcGIS JS version may have changed its `goTo` API.
 
 **ArcGIS native popup appearing on top of the widget popup**
 The widget suppresses the native popup via `arcView.popup.autoOpenEnabled = false` and `arcView.popup.close()`. If the native popup reappears, check the console for `popup API methods:` — if `close` is not listed, the ArcGIS JS version has changed the popup API and the suppression call needs updating.
 
-**Two widget instances / popups are different sizes**
-If you see two widget panels on screen, there are two instances of the widget in the Experience Builder layout. Delete one. In DevTools, run `document.querySelectorAll('[class*="widget-content"]').length` — if it returns more than 2 (the map + this widget), there is a duplicate.
-
 **`Module parse failed` / compile error on load**
-Usually a syntax error introduced during editing. Check that `widget.tsx` starts with `/**` (the JSDoc comment opening) — this has been accidentally truncated before. Run the EB dev server and read the webpack error for the exact line number.
+Usually a syntax error introduced during editing. Run the EB dev server (`npm start` from the `client` folder) and read the webpack error for the exact line number.
 
 ---
 
@@ -142,8 +146,6 @@ The map interaction itself (clicking to open popups) is mouse-only by nature of 
 
 ---
 
-## Contact / Ownership
+## Ownership
 
-Maintained by the **Carbon County Office of Emergency Management**.  
-GIS contact: `CarbonGIS` (AGOL username, see service Editor fields).  
-For ArcGIS Online organization access, contact your county IT administrator.
+Maintained by **Carbon County GIS**.
